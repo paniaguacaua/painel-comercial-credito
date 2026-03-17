@@ -663,20 +663,28 @@ div[data-testid="stTextInput"] input::placeholder {{
 ARQUIVO_DADOS = "dados.xlsx"
 
 @st.cache_data
-def carregar_dados() -> pd.DataFrame:
-    """Carrega base de dados de um arquivo Excel (dados.xlsx) e mapeia as colunas."""
+def carregar_dados():
+    """Carrega dados das duas planilhas e retorna (df_principal, df_totais_coop)."""
+    ARQUIVO_DADOS = "dados.xlsx"
+    ARQUIVO_TOTAIS = "qtdCooperativas.xlsx"
+    
+    # --- 1. Carregar Base Principal ---
     try:
-        # Tenta ler o arquivo Excel. É necessário ter a biblioteca 'openpyxl' instalada. 
-        # Comando: pip install openpyxl
         df_raw = pd.read_excel(ARQUIVO_DADOS)
-    except FileNotFoundError:
-        st.error(f"Arquivo '{ARQUIVO_DADOS}' não encontrado. Por favor, coloque o arquivo Excel na mesma pasta do script.")
-        # Retorna um DataFrame vazio com as colunas esperadas para o app não quebrar
-        return pd.DataFrame(columns=[
-            "central", "cooperativa", "PA", "modalidade", "submodalidade", 
-            "risco", "tipo_pessoa", "fab_limite", "valor_contrato", "prazo_meses", 
-            "indexador", "taxa_juros", "seg_prestamista", "data_contrato", "ano_mes", "risco_num"
-        ])
+    except Exception as e:
+        st.error(f"Erro ao carregar '{ARQUIVO_DADOS}': {e}")
+        return pd.DataFrame(), pd.DataFrame()
+
+    # --- 2. Carregar Totais de Cooperativas ---
+    try:
+        df_t_raw = pd.read_excel(ARQUIVO_TOTAIS)
+        # Contagem distinta de cooperativa por central no arquivo de totais
+        df_totais = df_t_raw.groupby("CENTRAL")["COOPERATIVA"].nunique().reset_index()
+        df_totais.columns = ["central", "total_coops"]
+        df_totais["central"] = df_totais["central"].astype(str)
+    except Exception as e:
+        st.warning(f"Aviso: Não foi possível carregar '{ARQUIVO_TOTAIS}': {e}")
+        df_totais = pd.DataFrame(columns=["central", "total_coops"])
 
     df = pd.DataFrame()
 
@@ -686,6 +694,7 @@ def carregar_dados() -> pd.DataFrame:
     
     # Tratando as colunas de texto/categóricas
     df["central"]         = df_raw["Número Central"].astype(str)
+    df["central_sigla"]   = df_raw["Sigla Central"].astype(str)
     df["cooperativa"]     = df_raw["Número Cooperativa"].astype(str)
     df["PA"]              = df_raw["Número PA"].astype(str)
     
@@ -712,6 +721,9 @@ def carregar_dados() -> pd.DataFrame:
         "CERTIFICADO DEPÓSITO INTERBANCÁRIO": "CDI",
         "TAXA SELIC": "SELIC",
     }, regex=False)
+
+    # REMOVER PÓS-FIXADOS (CDI e SELIC) conforme solicitado
+    df = df[~df["indexador"].isin(["CDI", "SELIC"])]
     
     df["seg_prestamista"] = df_raw["Possui Seguro Prestamista"].astype(str).str.upper().str.strip()
 
@@ -724,7 +736,16 @@ def carregar_dados() -> pd.DataFrame:
     df["prazo_meses"]     = pd.to_numeric(df_raw["Quantidade de Parcelas"], errors="coerce").fillna(0).astype(int)
     df["taxa_juros"]      = pd.to_numeric(df_raw["% Taxa Operação"], errors="coerce").fillna(0.0)
 
-    return df
+    # --- Lógica de Mês Incompleto ---
+    if not df.empty:
+        max_date = df["data_contrato"].max()
+        # Se a última data não for o último dia do mês, removemos o mês incompleto
+        from pandas.tseries.offsets import MonthEnd
+        if max_date != (max_date + MonthEnd(0)):
+            last_month = max_date.strftime("%Y-%m")
+            df = df[df["ano_mes"] != last_month]
+
+    return df, df_totais
 
 
 def aplicar_filtros(
@@ -778,8 +799,8 @@ def gerar_metricas(df: pd.DataFrame) -> dict:
     )
 
 
-def gerar_graficos(df: pd.DataFrame, risco_sel: list):
-    """Gera os quatro gráficos do dashboard."""
+def gerar_graficos(df: pd.DataFrame, risco_sel: list, df_totais: pd.DataFrame):
+    """Gera os quatro gráficos do dashboard e a tabela de cooperativas."""
 
     # Configurações base — fontes e cores legíveis
     BASE_LAYOUT = dict(
@@ -791,6 +812,7 @@ def gerar_graficos(df: pd.DataFrame, risco_sel: list):
             size=12,
         ),
         separators=".,",   # ponto como separador de milhar, vírgula como decimal
+        dragmode=False,    # Desabilitar zoom por clique e arraste
     )
     MARGIN_BAR  = dict(l=60, r=30, t=24, b=70)
     MARGIN_PIE  = dict(l=10, r=10, t=10, b=10)
@@ -802,7 +824,19 @@ def gerar_graficos(df: pd.DataFrame, risco_sel: list):
             df.groupby("ano_mes")["valor_contrato"]
             .sum().reset_index().sort_values("ano_mes")
         )
-        df_mes["label"] = pd.to_datetime(df_mes["ano_mes"]).dt.strftime("%b/%Y")
+        
+        # Mapeamento de meses para Português
+        meses_pt = {
+            "Jan": "Jan", "Feb": "Fev", "Mar": "Mar", "Apr": "Abr", "May": "Mai", "Jun": "Jun",
+            "Jul": "Jul", "Aug": "Ago", "Sep": "Set", "Oct": "Out", "Nov": "Nov", "Dec": "Dez"
+        }
+        
+        def translate_month(label):
+            # Formato esperado: %b/%Y
+            abrev, year = label.split("/")
+            return f"{meses_pt.get(abrev, abrev)}/{year}"
+
+        df_mes["label"] = pd.to_datetime(df_mes["ano_mes"]).dt.strftime("%b/%Y").apply(translate_month)
 
         fig_mes = go.Figure()
         fig_mes.add_trace(go.Bar(
@@ -976,7 +1010,7 @@ def gerar_graficos(df: pd.DataFrame, risco_sel: list):
         fig_seg = go.Figure()
         fig_seg.update_layout(**BASE_LAYOUT, height=340)
 
-    # ── Pré e Pós Fixado ──────────────────────────────────────────────
+    # ── Tipo de Indexador ─────────────────────────────────────────────
     if not df.empty and "indexador" in df.columns:
         df_ind = df.groupby("indexador")["valor_contrato"].sum().reset_index()
         cores_ind = [COR_TEAL, COR_VERDE, COR_ROXO, COR_MUTED, COR_BORDER]
@@ -1013,9 +1047,31 @@ def gerar_graficos(df: pd.DataFrame, risco_sel: list):
 
     # ── Cooperativas Operando ─────────────────────────────────────────
     if not df.empty:
-        df_coop = df.groupby("central")["cooperativa"].nunique().reset_index(name="qtd_coop")
-        df_coop = df_coop.sort_values("qtd_coop", ascending=False)
-        df_coop.columns = ["Central", "Qtd Cooperativas"]
+        # Concatenando Central com Sigla apenas para a exibição na tabela
+        df_coop_temp = df.copy()
+        df_coop_temp["central_full"] = df_coop_temp["central"] + " - " + df_coop_temp["central_sigla"]
+        
+        # Qtd de cooperativas operando (distintas) por central
+        res = df_coop_temp.groupby(["central", "central_full"])["cooperativa"].nunique().reset_index()
+        res.columns = ["central", "Central", "qtd_operando"]
+
+        # Cruzar com os totais carregados da planilha qtdCooperativas.xlsx
+        if not df_totais.empty:
+            res = res.merge(df_totais, on="central", how="left").fillna(0)
+            
+            def fmt_participacao(row):
+                operando = int(row["qtd_operando"])
+                total = int(row["total_coops"])
+                if total > 0:
+                    pct = (operando / total) * 100
+                    return f"{operando} ({pct:.0f}%)"
+                return f"{operando}"
+            
+            res["Qtd Cooperativas"] = res.apply(fmt_participacao, axis=1)
+        else:
+            res["Qtd Cooperativas"] = res["qtd_operando"].astype(str)
+
+        df_coop = res[["Central", "Qtd Cooperativas"]].sort_values("Central")
     else:
         df_coop = pd.DataFrame(columns=["Central", "Qtd Cooperativas"])
 
@@ -1190,7 +1246,7 @@ def main():
         tela_login()
         st.stop()
 
-    df = carregar_dados()
+    df, df_totais = carregar_dados()
 
     # ════════════════════════════════════════
     # SIDEBAR
@@ -1232,11 +1288,13 @@ def main():
         ano_mes_opts = sorted(df["ano_mes"].unique().tolist())
         ano_mes_sel  = st.multiselect("📅 Mês-Ano", ano_mes_opts,
                                       format_func=lambda x: f"{x[5:7]}/{x[0:4]}",
-                                      placeholder="Todos os períodos")
+                                      placeholder="Todos os períodos",
+                                      key="ano_mes_sel")
 
         mod_opts = sorted(df["modalidade"].unique().tolist())
         mod_sel  = st.multiselect("📋 Modalidade", mod_opts,
-                                     placeholder="Todas")
+                                     placeholder="Todas",
+                                     key="mod_sel")
 
         if mod_sel:
             submod_opts = sorted(df[df["modalidade"].isin(mod_sel)]["submodalidade"].unique().tolist())
@@ -1244,20 +1302,25 @@ def main():
             submod_opts = sorted(df["submodalidade"].unique().tolist())
 
         submod_sel  = st.multiselect("📂 Submodalidade", submod_opts,
-                                     placeholder="Todas")
+                                     placeholder="Todas",
+                                     key="submod_sel")
 
         fab_sel = st.multiselect("🏭 Fábrica de Limites", ["Sim","Não"],
-                                 placeholder="Sim / Não")
+                                 placeholder="Sim / Não",
+                                 key="fab_sel")
 
         seg_sel = st.multiselect("🛡️ Seguro Prestamista", ["Sim","Não"],
-                                 placeholder="Sim / Não")
+                                 placeholder="Sim / Não",
+                                 key="seg_sel")
 
         tp_sel  = st.multiselect("👤 Tipo de Pessoa", ["PF","PJ"],
-                                 placeholder="PF / PJ")
+                                 placeholder="PF / PJ",
+                                 key="tp_sel")
 
         fixado_opts = sorted(df["indexador"].unique().tolist())
-        fixado_sel = st.multiselect("Pré e Pós Fixado", fixado_opts,
-                                 placeholder="Todos")
+        fixado_sel = st.multiselect("Tipo de Indexador", fixado_opts,
+                                 placeholder="Todos",
+                                 key="fixado_sel")
 
         st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
 
@@ -1268,7 +1331,7 @@ def main():
         riscos_opts = sorted(df["risco"].unique().tolist(), key=lambda r: int(str(r).replace('R', '')) if str(r).replace('R', '').isdigit() else 0)
 
         risco_sel = st.multiselect("Nível de Risco", riscos_opts, default=riscos_opts,
-                                   label_visibility="collapsed")
+                                   label_visibility="collapsed", key="risco_sel")
 
         st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
         st.caption(f"📦 Base: {f'{len(df):,}'.replace(',', '.')} contratos carregados")
@@ -1322,13 +1385,25 @@ def main():
     if tp_sel:
         tags.append(f"Pessoa: <strong>{', '.join(tp_sel)}</strong>")
     if fixado_sel:
-        tags.append(f"Pré/Pós Fixado: <strong>{', '.join(fixado_sel)}</strong>")
+        tags.append(f"Indexador: <strong>{', '.join(fixado_sel)}</strong>")
     if tags:
-        st.markdown(
-            f"<div class='filtros-ativos'>🔍 Filtros ativos: &nbsp;"
-            + " &nbsp;·&nbsp; ".join(tags) + "</div>",
-            unsafe_allow_html=True,
-        )
+        c_filt, c_reset = st.columns([0.85, 0.15])
+        with c_filt:
+            st.markdown(
+                f"<div class='filtros-ativos'>🔍 Filtros ativos: &nbsp;"
+                + " &nbsp;·&nbsp; ".join(tags) + "</div>",
+                unsafe_allow_html=True,
+            )
+        with c_reset:
+            if st.button("Limpar Filtros", use_container_width=True):
+                # Resetar chaves específicas
+                keys_to_reset = ["central", "coop", "ano_mes_sel", "mod_sel", 
+                                 "submod_sel", "fab_sel", "seg_sel", "tp_sel", 
+                                 "fixado_sel", "risco_sel"]
+                for k in keys_to_reset:
+                    if k in st.session_state:
+                        del st.session_state[k]
+                st.rerun()
 
     # ── Indicadores Principais ───────────────
     st.markdown('<div class="section-title">📊 Indicadores Principais</div>',
@@ -1374,13 +1449,14 @@ def main():
         </div>
         """, unsafe_allow_html=True)
     else:
-        fig_mes, fig_tp, fig_risco, fig_seg, df_coop, fig_indexador = gerar_graficos(df_filtrado, risco_sel)
+        fig_mes, fig_tp, fig_risco, fig_seg, df_coop, fig_indexador = gerar_graficos(df_filtrado, risco_sel, df_totais)
 
         PLOTLY_CFG = dict(
             modeBarButtonsToRemove=[
                 "zoom2d","zoomIn2d","zoomOut2d","resetScale2d",
                 "lasso2d","select2d","toggleSpikelines",
                 "hoverClosestCartesian","hoverCompareCartesian",
+                "pan2d", "autoScale2d"
             ],
             displayModeBar=True,
             displaylogo=False,
@@ -1413,7 +1489,7 @@ def main():
             st.plotly_chart(fig_seg, use_container_width=True, config=PLOTLY_CFG)
         with col_g3:
             st.markdown(
-                '<p class="chart-title">📈 Pré e Pós Fixado</p>',
+                '<p class="chart-title">📈 Tipo de Indexador</p>',
                 unsafe_allow_html=True,
             )
             st.plotly_chart(fig_indexador, use_container_width=True, config=PLOTLY_CFG)
@@ -1432,13 +1508,25 @@ def main():
             '<p class="chart-title" style="margin-top: 20px;">🏢 Cooperativas com Operações (Por Central)</p>',
             unsafe_allow_html=True,
         )
-        st.dataframe(df_coop, use_container_width=True, hide_index=True)
+        st.dataframe(
+            df_coop, 
+            use_container_width=True, 
+            hide_index=True,
+            column_config={
+                "Qtd Cooperativas": st.column_config.Column(
+                    help="Quantidade de cooperativas operando e percentual total da central",
+                    width="medium",
+                    required=True,
+                )
+            }
+        )
 
     # ── Rodapé ───────────────────────────────
     st.markdown("""
     <div class="footer">
         Ferramenta de Precificação &nbsp;|&nbsp;
-        Desenvolvido com Streamlit &amp; Python ;
+        Desenvolvido com Streamlit &amp; Python &nbsp;|&nbsp;
+        Sicoob
     </div>
     """, unsafe_allow_html=True)
 
