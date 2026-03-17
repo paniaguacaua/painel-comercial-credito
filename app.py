@@ -1,3 +1,5 @@
+# python.exe -m streamlit run app.py
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -215,10 +217,15 @@ html, body, [class*="css"] {{
     background: linear-gradient(135deg, {COR_ESCURO} 0%, #005A6E 55%, {COR_ESCURO} 100%);
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 30px 42px;
+    padding: 40px 20px;
     margin-bottom: 22px;
     position: relative;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }}
 .main-header::before {{
     content: '';
@@ -231,15 +238,16 @@ html, body, [class*="css"] {{
 }}
 .main-header h1 {{
     font-family: var(--heading) !important;
-    font-size: 2rem;
+    font-size: 2.6rem;
     font-weight: 800;
-    margin: 0;
+    margin: 15px 0 0;
     background: white;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     position: relative; z-index: 1;
     letter-spacing: -0.01em;
+    line-height: 1.2;
 }}
 .main-header p {{
     color: var(--muted);
@@ -520,21 +528,52 @@ div[data-testid="stTextInput"] input::placeholder {{
 
 /* ── RESPONSIVO MOBILE ───────────────────── */
 @media (max-width: 900px) {{
-    .block-container {{ padding: 0.8rem 0.8rem 2rem !important; }}
-    .main-header {{ padding: 20px 18px !important; border-radius: 12px !important; margin-bottom: 16px !important; }}
-    .main-header h1 {{ font-size: 1.35rem !important; }}
+    .block-container {{ padding: 0.8rem 0.5rem 2rem !important; }}
+    .main-header {{ 
+        padding: 30px 15px !important; 
+        border-radius: 12px !important; 
+        margin-bottom: 16px !important;
+    }}
+    .main-header img {{
+        height: 60px !important;
+    }}
+    .main-header h1 {{ 
+        font-size: 1.6rem !important; 
+        margin-top: 10px !important;
+    }}
     .main-header p  {{ font-size: 0.8rem !important; }}
     .section-title  {{ font-size: 0.65rem !important; margin: 18px 0 10px !important; }}
-    [data-testid="stMetric"] {{ padding: 14px 16px !important; border-radius: 10px !important; margin-bottom: 8px !important; }}
-    [data-testid="stMetricValue"] {{ font-size: 1.25rem !important; }}
+    
+    /* Métricas em lista no mobile */
+    [data-testid="stMetric"] {{ 
+        padding: 14px 16px !important; 
+        border-radius: 10px !important; 
+        margin-bottom: 10px !important; 
+    }}
+    [data-testid="stMetricValue"] {{ font-size: 1.4rem !important; }}
     [data-testid="stMetric"] label {{ font-size: 0.64rem !important; }}
-    [data-testid="stHorizontalBlock"] {{ flex-direction: column !important; gap: 0 !important; }}
-    [data-testid="stHorizontalBlock"] > div {{ width: 100% !important; min-width: 100% !important; flex: 1 1 100% !important; }}
+    
+    /* Forçar colunas a ocuparem 100% no mobile */
+    [data-testid="stHorizontalBlock"] {{ 
+        flex-direction: column !important; 
+        gap: 0 !important; 
+    }}
+    [data-testid="stHorizontalBlock"] > div {{ 
+        width: 100% !important; 
+        min-width: 100% !important; 
+        flex: 1 1 100% !important; 
+        margin-bottom: 10px !important;
+    }}
+    
     [data-testid="stSidebar"] {{ width: 85vw !important; }}
-    /* Gráficos: altura mínima + margem inferior para não cortar eixo */
-    [data-testid="stPlotlyChart"] {{ overflow: visible !important; padding-bottom: 12px !important; }}
-    .js-plotly-plot {{ min-height: 280px !important; }}
-    .js-plotly-plot .main-svg {{ overflow: visible !important; }}
+    
+    /* Ajuste de gráficos para mobile */
+    [data-testid="stPlotlyChart"] {{ 
+        overflow: visible !important; 
+        padding-bottom: 5px !important; 
+    }}
+    .js-plotly-plot {{ min-height: 250px !important; }}
+    
     [data-testid="stDataFrame"] {{ overflow-x: auto !important; font-size: 0.75rem !important; }}
     .no-data {{ padding: 30px 16px !important; font-size: 0.82rem !important; }}
     .footer {{ font-size: 0.68rem !important; margin-top: 24px !important; }}
@@ -890,7 +929,7 @@ def gerar_graficos(df: pd.DataFrame, risco_sel: list, df_totais: pd.DataFrame):
             values=df_tp["valor_contrato"],
             hole=0.50,
             marker=dict(
-                colors=[COR_ROXO, COR_TEAL],
+                colors=[COR_VERDE, COR_TEAL],
                 line=dict(color=COR_BG, width=3),
             ),
             textinfo="percent",
@@ -976,7 +1015,7 @@ def gerar_graficos(df: pd.DataFrame, risco_sel: list, df_totais: pd.DataFrame):
     if not df.empty and "seg_prestamista" in df.columns:
         df_seg = df.groupby("seg_prestamista")["valor_contrato"].sum().reset_index()
         COR_SIM = COR_TEAL
-        COR_NAO = "#E05C5C"
+        COR_NAO = COR_VERDE
         cores_seg = [COR_SIM if str(v).upper().strip() == "SIM" else COR_NAO for v in df_seg["seg_prestamista"]]
         fig_seg = go.Figure(go.Pie(
             labels=df_seg["seg_prestamista"],
@@ -1262,8 +1301,8 @@ def main():
                     f"🏦 Central / Cooperativa</p>", unsafe_allow_html=True)
 
         centrais    = ["Todas"] + sorted(df["central"].unique().tolist())
-        st.markdown(f"<p style='color:{COR_MUTED};font-size:0.72rem;font-weight:600;"
-                    f"letter-spacing:0.04em;margin:0 0 4px;'>Central</p>",
+        st.markdown(f"<p style='color:{COR_MUTED};font-size:0.8rem;font-weight:100;"
+                    f"letter-spacing:0.04em;margin:0 0 4px;'>CENTRAL</p>",
                     unsafe_allow_html=True)
         central_sel = st.selectbox("Central", centrais,
                                    label_visibility="collapsed", key="central")
@@ -1273,8 +1312,8 @@ def main():
         else:
             coops = ["Todas"] + sorted(df[df["central"] == central_sel]["cooperativa"].unique().tolist())
 
-        st.markdown(f"<p style='color:{COR_MUTED};font-size:0.72rem;font-weight:600;"
-                    f"letter-spacing:0.04em;margin:6px 0 4px;'>Cooperativa</p>",
+        st.markdown(f"<p style='color:{COR_MUTED};font-size:0.8rem;font-weight:100;"
+                    f"letter-spacing:0.04em;margin:6px 0 4px;'>COOPERATIVA</p>",
                     unsafe_allow_html=True)
         coop_sel = st.selectbox("Cooperativa", coops,
                                 label_visibility="collapsed", key="coop")
@@ -1343,10 +1382,8 @@ def main():
     # ── Header ──────────────────────────────
     st.markdown(f"""
     <div class="main-header">
-        <div style="display:flex;align-items:center;gap:24px;position:relative;z-index:1;">
-            <img src="{LOGO_B64}" style="height:80px;object-fit:contain;background:#FFFFFF;border-radius:10px;padding:8px 14px;margin-top:15px;" alt="Sicoob" />
-            <h1 style="margin:0;">Ferramenta de Precificação</h1>
-        </div>
+        <img src="{LOGO_B64}" style="height:80px;object-fit:contain;background:#FFFFFF;border-radius:10px;padding:8px 14px;" alt="Sicoob" />
+        <h1>Ferramenta de Precificação</h1>
     </div>
     """, unsafe_allow_html=True)
 
