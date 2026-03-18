@@ -778,9 +778,14 @@ def carregar_dados():
     # --- Lógica de Mês Incompleto ---
     if not df.empty:
         max_date = df["data_contrato"].max()
-        # Se a última data não for o último dia do mês, removemos o mês incompleto
-        from pandas.tseries.offsets import MonthEnd
-        if max_date != (max_date + MonthEnd(0)):
+        # Se a última data for anterior ao último dia útil do mês, consideramos incompleto
+        from pandas.tseries.offsets import MonthEnd, BDay
+        last_day = max_date + MonthEnd(0)
+        last_bd = last_day
+        if last_day.weekday() >= 5: # Sábado ou Domingo
+            last_bd = last_day - BDay(1)
+            
+        if max_date < last_bd:
             last_month = max_date.strftime("%Y-%m")
             df = df[df["ano_mes"] != last_month]
 
@@ -890,7 +895,7 @@ def gerar_graficos(df: pd.DataFrame, risco_sel: list, df_totais: pd.DataFrame):
             customdata=df_mes['valor_contrato'].apply(lambda v: fmt_abrev(v)),
             text=df_mes['valor_contrato'].apply(lambda v: fmt_abrev(v)),
             textposition='auto',
-            textfont=dict(color='white'),
+            textfont=dict(color='white', weight="bold"),
             hovertemplate="<b>%{x}</b><br><span style='color:#00AE9D'>R$ %{customdata}</span><extra></extra>",
         ))
         fig_mes.update_layout(
@@ -933,10 +938,10 @@ def gerar_graficos(df: pd.DataFrame, risco_sel: list, df_totais: pd.DataFrame):
                 line=dict(color=COR_BG, width=3),
             ),
             textinfo="percent",
-            textfont=dict(size=13, color="#FFFFFF", family="'Sicoob Sans','Nunito Sans',sans-serif"),
-            textposition="inside",
-            pull=[0.04, 0.04],
-            automargin=False,
+            textfont=dict(size=14, family="'Sicoob Sans','Nunito Sans',sans-serif", weight="bold"),
+            textposition="outside",
+            pull=[0.04] * len(df_tp),
+            automargin=True,
             hovertemplate="<b>%{label}</b><br>R$ %{value:,.0f}<br>%{percent}<extra></extra>",
         ))
         fig_tp.update_layout(
@@ -979,7 +984,7 @@ def gerar_graficos(df: pd.DataFrame, risco_sel: list, df_totais: pd.DataFrame):
             customdata=df_risco['valor_contrato'].apply(lambda v: fmt_abrev(v)),
             text=df_risco['valor_contrato'].apply(lambda v: fmt_abrev(v)),
             textposition='auto',
-            textfont=dict(color='white'),
+            textfont=dict(color='white', weight="bold"),
             hovertemplate="<b>%{x}</b><br><span style='color:#00AE9D'>R$ %{customdata}</span><extra></extra>",
         ))
 
@@ -1026,10 +1031,10 @@ def gerar_graficos(df: pd.DataFrame, risco_sel: list, df_totais: pd.DataFrame):
                 line=dict(color=COR_BG, width=3),
             ),
             textinfo="percent",
-            textfont=dict(size=13, color="#FFFFFF", family="'Sicoob Sans','Nunito Sans',sans-serif"),
-            textposition="inside",
-            pull=[0.04, 0.04],
-            automargin=False,
+            textfont=dict(size=14, family="'Sicoob Sans','Nunito Sans',sans-serif", weight="bold"),
+            textposition="outside",
+            pull=[0.04] * len(df_seg),
+            automargin=True,
             hovertemplate="<b>%{label}</b><br>R$ %{value:,.0f}<br>%{percent}<extra></extra>",
         ))
         fig_seg.update_layout(
@@ -1062,9 +1067,10 @@ def gerar_graficos(df: pd.DataFrame, risco_sel: list, df_totais: pd.DataFrame):
                 line=dict(color=COR_BG, width=3),
             ),
             textinfo="percent",
-            textfont=dict(size=13, color="#FFFFFF", family="'Sicoob Sans','Nunito Sans',sans-serif"),
-            textposition="inside",
-            automargin=False,
+            textfont=dict(size=14, family="'Sicoob Sans','Nunito Sans',sans-serif", weight="bold"),
+            textposition="outside",
+            pull=[0.04] * len(df_ind),
+            automargin=True,
             hovertemplate="<b>%{label}</b><br>R$ %{value:,.0f}<br>%{percent}<extra></extra>",
         ))
         fig_indexador.update_layout(
