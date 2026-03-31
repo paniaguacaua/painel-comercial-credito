@@ -402,7 +402,7 @@ def tela_menu():
         """, unsafe_allow_html=True)
         if st.button("Entrar", key="btn_bid", use_container_width=True):
             st.session_state["force_collapse"] = True
-            st.switch_page("pages/Concessão_BID.py")
+            st.switch_page("pages/concessao_BID.py")
 
     with col2:
         st.markdown("""
@@ -412,7 +412,7 @@ def tela_menu():
         """, unsafe_allow_html=True)
         if st.button("Entrar", key="btn_app", use_container_width=True):
             st.session_state["force_collapse"] = True
-            st.switch_page("pages/Ferramenta_de_Precificação.py")
+            st.switch_page("pages/ferramenta_precificacao.py")
 
     st.markdown("""
     <div class="footer">
