@@ -319,6 +319,11 @@ html, body, [class*="css"] {{
 }}
 [data-testid="stMetricDelta"] svg {{ display: none; }}
 
+/* Oculta o "-" do card Taxa Média mantendo o espaço */
+[data-testid="stHorizontalBlock"] > div:nth-child(2) [data-testid="stMetricDelta"] {{
+    visibility: hidden !important;
+}}
+
 /* ── DATAFRAME ───────────────────────────── */
 [data-testid="stDataFrame"] {{
     border-radius: 12px;
