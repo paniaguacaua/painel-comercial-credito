@@ -251,8 +251,8 @@ div[data-testid="stTextInput"] input::placeholder {{
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 20px;
-    padding: 40px 30px;
-    height: 150px;
+    padding: 30px 20px;
+    min-height: 150px;
     text-align: center;
     transition: all 0.3s ease;
     cursor: pointer;
@@ -261,11 +261,12 @@ div[data-testid="stTextInput"] input::placeholder {{
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    margin-bottom: 20px !important;
+    margin-bottom: 15px !important;
+    word-break: break-word;
 }}
 .menu-card:hover {{
     border-color: var(--teal);
-    transform: translateY(-10px);
+    transform: translateY(-5px);
     box-shadow: 0 15px 45px rgba(0,0,0,0.5);
     background: #005570;
 }}
@@ -273,10 +274,36 @@ div[data-testid="stTextInput"] input::placeholder {{
     font-size: 4rem; margin-bottom: 20px;
 }}
 .menu-card h1 {{
-    font-size: 2rem; font-weight: 700; margin-bottom: 10px; color: white;
+    font-size: clamp(1.4rem, 4vw, 2rem); 
+    font-weight: 700; 
+    margin: 0; 
+    padding: 0;
+    color: white; 
+    line-height: 1.25;
+    text-align: center;
+    width: 100%;
+}}
+.menu-card h1 a {{
+    display: none !important;
 }}
 .menu-card p {{
     color: var(--muted); font-size: 1rem; line-height: 1.4;
+}}
+
+/* RESPONSIVO MOBILE */
+@media (max-width: 900px) {{
+    .block-container {{ padding-left: 1rem !important; padding-right: 1rem !important; padding-top: 2rem !important; }}
+    .main-header {{ padding: 25px 15px; margin-bottom: 20px; }}
+    .main-header img {{ height: 60px !important; margin-bottom: 5px !important; }}
+    .main-header h1 {{ font-size: 1.6rem !important; }}
+    .main-header p {{ font-size: 0.9rem !important; }}
+    
+    .menu-card {{ min-height: 110px; padding: 20px 15px; margin-bottom: 10px !important; }}
+    .menu-card h1 {{ font-size: 1.3rem !important; margin-bottom: 0; }}
+    
+    /* Forçar colunas a ocuparem 100% no mobile */
+    [data-testid="stHorizontalBlock"] {{ flex-direction: column !important; gap: 5px !important; }}
+    [data-testid="stHorizontalBlock"] > div {{ width: 100% !important; min-width: 100% !important; flex: 1 1 100% !important; margin-bottom: 10px !important; }}
 }}
 
 /* FOOTER */

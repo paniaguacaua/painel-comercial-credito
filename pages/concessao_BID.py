@@ -626,7 +626,7 @@ def carregar_dados():
     try:
         df_bid = pd.read_excel(ARQUIVO_BID)
         # Adicionar categoria para o grupo BID (Cooperados)
-        df_bid["Categoria Linha"] = "SICOOB VERDE · ASSOCIADO"
+        df_bid["Categoria Linha"] = "LINHA ASSOCIADO"
         dfs.append(df_bid)
     except Exception as e:
         st.error(f"Erro ao carregar '{ARQUIVO_BID}': {e}")
@@ -652,7 +652,7 @@ def carregar_dados():
                 )
             
             # Adicionar categoria para o grupo Giro (Cooperativa)
-            df_giro["Categoria Linha"] = "CAPITAL DE GIRO · COOPERATIVA"
+            df_giro["Categoria Linha"] = "LINHA COOPERATIVA / CENTRAL"
             
             dfs.append(df_giro)
     except Exception as e:
@@ -692,7 +692,11 @@ def carregar_dados():
 
     # Linha de crédito
     df["linha_credito"]   = df_raw["Linha Crédito"].astype(str).str.strip()
-    df["categoria_linha"] = df_raw["Categoria Linha"].astype(str).str.strip()
+    categoria_map = {
+        "CAPITAL DE GIRO · COOPERATIVA": "LINHA COOPERATIVA / CENTRAL",
+        "SICOOB VERDE · ASSOCIADO": "LINHA ASSOCIADO"
+    }
+    df["categoria_linha"] = df_raw["Categoria Linha"].astype(str).str.strip().replace(categoria_map)
 
     # Ano Mes para filtro
     df["ano_mes"] = df["data_movimento"].dt.to_period("M").astype(str)
@@ -757,6 +761,30 @@ def main():
             """,
             height=0, width=0,
         )
+
+    import streamlit.components.v1 as components
+    components.html(
+        """
+        <script>
+        const doc = window.parent.document;
+        const updateSidebar = () => {
+            const spans = doc.querySelectorAll('[data-testid="stSidebarNavItem"] span');
+            spans.forEach(span => {
+                const t = span.innerText.trim().toLowerCase();
+                if (t === "menu") span.innerText = "Menu";
+                else if (t === "concessao bid") span.innerText = "Concessão BID";
+                else if (t === "ferramenta precificacao") span.innerText = "Ferramenta de Precificação";
+            });
+        };
+        updateSidebar();
+        const nav = doc.querySelector('[data-testid="stSidebarNavItems"]');
+        if (nav) {
+            new MutationObserver(updateSidebar).observe(nav, { childList: true, subtree: true, characterData: true });
+        }
+        </script>
+        """,
+        height=0, width=0,
+    )
 
     # ── Tela de Carregamento (Splash Screen) ──
     placeholder = st.empty()
@@ -1062,7 +1090,7 @@ def main():
         # ── Gráficos PF/PJ + Valor Diário ────────
         st.markdown('<div class="section-title">Análise Visual</div>', unsafe_allow_html=True)
 
-        col_g1, col_g2 = st.columns(2)
+        col_g1, col_g2, col_g3 = st.columns(3)
 
         # Donut PF/PJ
         with col_g1:
@@ -1121,6 +1149,55 @@ def main():
                 margin=dict(l=60, r=60, t=80, b=60),
             )
             st.plotly_chart(fig_pp, use_container_width=True, config=PLOTLY_CFG)
+
+        # Gráfico Velocímetro (Meta Global)
+        with col_g3:
+            st.markdown('<p class="chart-title">🎯 Meta Global (Valor Contrato)</p>', unsafe_allow_html=True)
+            meta_total = 250000000
+            
+            fig_meta = go.Figure(go.Indicator(
+                mode = "gauge",
+                value = valor_total,
+                domain = dict(x=[0, 1], y=[0, 1]),
+                gauge = dict(
+                    axis=dict(range=[0, meta_total], tickwidth=1, tickcolor=COR_BORDER, tickfont=dict(color=COR_AXIS)),
+                    bar=dict(color=COR_VERDE),
+                    bgcolor=COR_CARD,
+                    borderwidth=2,
+                    bordercolor=COR_BORDER,
+                    steps=[
+                        dict(range=[0, meta_total * 0.5], color="rgba(0,174,157,0.1)"),
+                        dict(range=[meta_total * 0.5, meta_total * 0.8], color="rgba(0,174,157,0.2)"),
+                        dict(range=[meta_total * 0.8, meta_total], color="rgba(0,174,157,0.4)")
+                    ],
+                )
+            ))
+            perc_atingido = (valor_total / meta_total) * 100 if meta_total > 0 else 0
+            
+            fig_meta.add_annotation(
+                x=0.5, y=0.40,
+                text=f"<b>{fmt_moeda(valor_total)}</b>",
+                font=dict(size=22, color=COR_TEXTO, family="'Sicoob Sans','Nunito Sans',sans-serif"),
+                showarrow=False
+            )
+            fig_meta.add_annotation(
+                x=0.5, y=0.20,
+                text=f"Meta: {fmt_moeda(meta_total)}",
+                font=dict(size=13, color=COR_MUTED, family="'Sicoob Sans','Nunito Sans',sans-serif"),
+                showarrow=False
+            )
+            fig_meta.add_annotation(
+                x=0.5, y=0.02,
+                text=f"({perc_atingido:.1f}% atingido)",
+                font=dict(size=14, color=COR_VERDE, family="'Sicoob Sans','Nunito Sans',sans-serif"),
+                showarrow=False
+            )
+            fig_meta.update_layout(
+                **BASE_LAYOUT,
+                height=340,
+                margin=dict(l=40, r=40, t=80, b=60),
+            )
+            st.plotly_chart(fig_meta, use_container_width=True, config=PLOTLY_CFG)
 
         # Valor Diário últimos 14 dias
         st.markdown('<p class="chart-title">📅 Valor Diário — Últimos 14 Dias</p>', unsafe_allow_html=True)
