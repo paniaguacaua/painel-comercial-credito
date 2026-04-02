@@ -140,6 +140,19 @@ html, body, [class*="css"] {{
     -webkit-font-smoothing: antialiased;
 }}
 .stApp {{ background-color: var(--bg); }}
+div[data-testid="stButton"] button {{
+    background: linear-gradient(45deg, {COR_TEAL}, {COR_VERDE}) !important;
+    color: white !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+    border: none !important;
+    padding: 0.6rem 2rem !important;
+    transition: all 0.3s ease !important;
+    white-space: nowrap !important;
+    min-width: 100% !important;
+    height: 52px !important;
+}}
+
 
 /* ── SIDEBAR ─────────────────────────────── */
 [data-testid="stSidebar"] {{
@@ -261,8 +274,9 @@ html, body, [class*="css"] {{
     background: linear-gradient(135deg, {COR_ESCURO} 0%, #005A6E 55%, {COR_ESCURO} 100%);
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 40px 20px;
-    margin-bottom: 22px;
+    padding: 35px 20px;
+    margin-top: 0 !important;
+    margin-bottom: 24px;
     position: relative;
     overflow: hidden;
     display: flex;
@@ -282,9 +296,9 @@ html, body, [class*="css"] {{
 }}
 .main-header h1 {{
     font-family: var(--heading) !important;
-    font-size: 2.6rem;
+    font-size: 2.5rem;
     font-weight: 800;
-    margin: 15px 0 0;
+    margin: 12px 0 0;
     background: white;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -302,15 +316,15 @@ html, body, [class*="css"] {{
 /* ── SECTION TITLE ──────────────────────── */
 .section-title {{
     font-family: var(--heading) !important;
-    font-size: 0.72rem;
+    font-size: 0.74rem;
     font-weight: 700;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: {COR_TEAL};
-    margin: 28px 0 14px;
+    margin: 24px 0 16px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }}
 .section-title::after {{
     content: '';
@@ -454,12 +468,16 @@ div[data-testid="stTextInput"] input::placeholder {{
 .filtros-ativos {{
     background: {COR_CARD};
     border: 1px solid {COR_BORDER};
-    border-radius: 10px;
-    padding: 10px 18px;
-    font-size: 0.84rem;
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 0.88rem;
     color: {COR_LABEL};
-    margin-bottom: 6px;
+    margin-bottom: 12px;
     font-family: var(--font) !important;
+    line-height: 1.6;
+    height: auto;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }}
 .filtros-ativos strong {{
     color: {COR_TEXTO};
@@ -1470,6 +1488,24 @@ def main():
     # Limpa a tela de carregamento
     placeholder.empty()
 
+    # Mapa de siglas das centrais (usado nos filtros ativos)
+    _sigla_central_map_preview = {
+        "1001": "SICOOB CENTRAL ES",
+        "1002": "SICOOB CENTRAL BA",
+        "1003": "SICOOB CENTRAL CREDIMINAS",
+        "1004": "SICOOB NOVA CENTRAL",
+        "1005": "SICOOB CENTRAL SC/RS",
+        "1006": "SICOOB CENTRAL SÃO PAULO",
+        "1007": "SICOOB CENTRAL NORTE",
+        "2003": "SICOOB CENTRAL CECREMGE",
+        "2005": "SICOOB CENTRAL CECRESP",
+        "2007": "SICOOB CENTRAL NE",
+        "2008": "SICOOB CENTRAL RONDON",
+        "2009": "SICOOB CENTRAL UNICOOB",
+        "2015": "SICOOB UNI",
+        "2016": "SICOOB UNIMAIS RIO",
+    }
+
 
     # Contador para reset de filtros
     if "fp_reset" not in st.session_state:
@@ -1591,10 +1627,10 @@ def main():
     data_base_str = max_date.strftime("%d/%m/%Y") if max_date is not pd.NaT else "N/A"
     st.markdown(f"""
     <div class="main-header">
-        <img src="{LOGO_B64}" style="height:80px;object-fit:contain;background:#FFFFFF;border-radius:10px;padding:8px 14px;" alt="Sicoob" />
+        <img src="{LOGO_B64}" style="height:75px;object-fit:contain;background:#FFFFFF;border-radius:12px;padding:10px 16px;" alt="Sicoob" />
         <h1>Ferramenta de Precificação</h1>
         <p style="color: white; font-size: 1rem; margin-top: 5px; opacity: 1; font-weight: 600;">Data Base: {data_base_str}</p>
-        <p style="color: {COR_TEXTO}; font-size: 0.85rem; margin: 0; margin-top: 10px; line-height: 1.3;">
+        <p style="color: {COR_TEXTO}; font-size: 0.85rem; margin: 0; margin-top: 8px; line-height: 1.3;">
             Painel atualizado mensalmente.
         </p>
     </div>
@@ -1620,7 +1656,8 @@ def main():
     tags = []
     if central_sel:
         if len(central_sel) == 1:
-            tags.append(f"Central: <strong>{central_sel[0]}</strong>")
+            _sigla = _sigla_central_map_preview.get(central_sel[0], central_sel[0])
+            tags.append(f"Central: <strong>{central_sel[0]} – {_sigla}</strong>")
         else:
             tags.append(f"Central: <strong>{len(central_sel)} selecionadas</strong>")
     if coop_sel:
@@ -1643,7 +1680,7 @@ def main():
     if fixado_sel:
         tags.append(f"Indexador: <strong>{', '.join(fixado_sel)}</strong>")
     if tags:
-        c_filt, c_reset = st.columns([0.82, 0.18])
+        c_filt, c_reset = st.columns([0.78, 0.22], vertical_alignment="top")
         with c_filt:
             st.markdown(
                 f"<div class='filtros-ativos'>🔍 Filtros ativos: &nbsp;"

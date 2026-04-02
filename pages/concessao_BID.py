@@ -94,6 +94,19 @@ html, body, [class*="css"] {{
     -webkit-font-smoothing: antialiased;
 }}
 .stApp {{ background-color: var(--bg); }}
+div[data-testid="stButton"] button {{
+    background: linear-gradient(45deg, {COR_TEAL}, {COR_VERDE}) !important;
+    color: white !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+    border: none !important;
+    padding: 0.6rem 2rem !important;
+    transition: all 0.3s ease !important;
+    white-space: nowrap !important;
+    min-width: 100% !important;
+    height: 52px !important;
+}}
+
 
 /* ── SIDEBAR ─────────────────────────────── */
 [data-testid="stSidebar"] {{
@@ -215,8 +228,9 @@ html, body, [class*="css"] {{
     background: linear-gradient(135deg, {COR_ESCURO} 0%, #005A6E 55%, {COR_ESCURO} 100%);
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 40px 20px;
-    margin-bottom: 22px;
+    padding: 35px 20px;
+    margin-top: 0 !important;
+    margin-bottom: 24px;
     position: relative;
     overflow: hidden;
     display: flex;
@@ -236,9 +250,9 @@ html, body, [class*="css"] {{
 }}
 .main-header h1 {{
     font-family: var(--heading) !important;
-    font-size: 2.6rem;
+    font-size: 2.5rem;
     font-weight: 800;
-    margin: 15px 0 0;
+    margin: 12px 0 0;
     background: white;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -256,15 +270,15 @@ html, body, [class*="css"] {{
 /* ── SECTION TITLE ──────────────────────── */
 .section-title {{
     font-family: var(--heading) !important;
-    font-size: 0.72rem;
+    font-size: 0.74rem;
     font-weight: 700;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: {COR_TEAL};
-    margin: 28px 0 14px;
+    margin: 24px 0 16px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }}
 .section-title::after {{
     content: '';
@@ -356,7 +370,7 @@ html, body, [class*="css"] {{
 ::-webkit-scrollbar-thumb {{ background: var(--border); border-radius: 3px; }}
 
 /* ── LAYOUT ──────────────────────────────── */
-.block-container {{ padding-top: 1.4rem !important; }}
+.block-container {{ padding-top: 0.5rem !important; }}
 
 /* ── SIDEBAR HELPERS ─────────────────────── */
 .sb-divider {{ height: 1px; background: var(--border); margin: 14px 0; }}
@@ -413,12 +427,16 @@ div[data-testid="stTextInput"] input::placeholder {{
 .filtros-ativos {{
     background: {COR_CARD};
     border: 1px solid {COR_BORDER};
-    border-radius: 10px;
-    padding: 10px 18px;
-    font-size: 0.84rem;
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 0.88rem;
     color: {COR_LABEL};
-    margin-bottom: 6px;
+    margin-bottom: 12px;
     font-family: var(--font) !important;
+    line-height: 1.6;
+    height: auto;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }}
 .filtros-ativos strong {{
     color: {COR_TEXTO};
@@ -844,7 +862,7 @@ def main():
         
         df = carregar_dados()
     
-    placeholder.empty()
+    # placeholder.empty()  <-- Removido para reutilizar o slot no header
 
     if df.empty:
         st.warning("Nenhum dado carregado. Verifique o arquivo concessao_BID.xlsx.")
@@ -860,7 +878,8 @@ def main():
         "1006": "SICOOB CENTRAL SÃO PAULO",
         "1007": "SICOOB CENTRAL NORTE",
         "2003": "SICOOB CENTRAL CECREMGE",
-        "2007": "SICOOB CENTRAL CECRESP",
+        "2005": "SICOOB CENTRAL CECRESP",
+        "2007": "SICOOB CENTRAL NE",
         "2008": "SICOOB CENTRAL RONDON",
         "2009": "SICOOB CENTRAL UNICOOB",
         "2015": "SICOOB UNI",
@@ -941,13 +960,12 @@ def main():
 
     # ── Header ───────────────────────────────
     data_base_str = df["data_movimento"].max().strftime("%d/%m/%Y") if not df.empty else "N/A"
-    
-    st.markdown(f"""
+    placeholder.markdown(f"""
     <div class="main-header">
-        <img src="{LOGO_B64}" style="height:80px;object-fit:contain;background:#FFFFFF;border-radius:10px;padding:8px 14px;" alt="Sicoob" />
+        <img src="{LOGO_B64}" style="height:75px;object-fit:contain;background:#FFFFFF;border-radius:12px;padding:10px 16px;" alt="Sicoob" />
         <h1>Concessão BID</h1>
         <p style="color: white; font-size: 1rem; margin-top: 5px; opacity: 1; font-weight: 600;">Data Base: {data_base_str}</p>
-        <p style="color: {COR_TEXTO}; font-size: 0.85rem; margin: 0; margin-top: 10px; line-height: 1.3;">
+        <p style="color: {COR_TEXTO}; font-size: 0.85rem; margin: 0; margin-top: 8px; line-height: 1.3;">
             Painel atualizado semanalmente.
         </p>
     </div>
@@ -975,7 +993,7 @@ def main():
     if categoria_linha_sel:
         tags.append(f"Linha de Crédito: <strong>{', '.join(categoria_linha_sel)}</strong>")
     if tags:
-        c_filt, c_reset = st.columns([0.82, 0.18])
+        c_filt, c_reset = st.columns([0.78, 0.22], vertical_alignment="top")
         with c_filt:
             st.markdown(
                 f"<div class='filtros-ativos'>🔍 Filtros ativos: &nbsp;"
@@ -1003,7 +1021,7 @@ def main():
     c1, c2, c3 = st.columns(3)
     with c1:
         st.metric(
-            label="Valor Total Liberado",
+            label="Valor Total Contratado",
             value=fmt_moeda(valor_total),
             delta=f"{f'{qtd_contratos:,}'.replace(',', '.')} contratos",
         )
