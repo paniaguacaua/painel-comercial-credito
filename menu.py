@@ -110,6 +110,9 @@ html, body, [class*="css"] {{
     background-clip: text;
     line-height: 1.2;
 }}
+.main-header h1 a {{
+    display: none !important;
+}}
 .main-header p {{
     font-size: clamp(0.85rem, 2vw, 1.1rem);
     color: white;
@@ -232,62 +235,40 @@ div[data-testid="stTextInput"] input::placeholder {{
     color: {COR_MUTED} !important;
     opacity: 1 !important;
 }}
+/* MENU CARDS (Normal Buttons in this page) */
 .stButton > button {{
-    background: linear-gradient(135deg, {COR_TEAL}, {COR_VERDE}) !important;
-    color: #001E26 !important;
-    border: none !important;
-    border-radius: 10px !important;
-    padding: 10px 28px !important;
-    font-weight: 700 !important;
-    font-size: 0.92rem !important;
-    letter-spacing: 0.04em !important;
-    font-family: var(--font) !important;
-    transition: opacity 0.2s !important;
-}}
-.stButton > button:hover {{ opacity: 0.88 !important; }}
-
-/* MENU CARDS */
-.menu-card {{
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 30px 20px;
-    min-height: 150px;
-    text-align: center;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    background: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 20px !important;
+    padding: 30px 20px !important;
+    min-height: 150px !important;
+    text-align: center !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
     margin-bottom: 15px !important;
-    word-break: break-word;
+    word-break: break-word !important;
 }}
-.menu-card:hover {{
-    border-color: var(--teal);
-    transform: translateY(-5px);
-    box-shadow: 0 15px 45px rgba(0,0,0,0.5);
-    background: #005570;
+.stButton > button:hover {{
+    border-color: var(--teal) !important;
+    transform: translateY(-5px) !important;
+    box-shadow: 0 15px 45px rgba(0,0,0,0.5) !important;
+    background: #005570 !important;
 }}
-.menu-card .icon {{
-    font-size: 4rem; margin-bottom: 20px;
-}}
-.menu-card h1 {{
-    font-size: clamp(1.4rem, 4vw, 2rem); 
-    font-weight: 700; 
-    margin: 0; 
-    padding: 0;
-    color: white; 
-    line-height: 1.25;
-    text-align: center;
-    width: 100%;
-}}
-.menu-card h1 a {{
-    display: none !important;
-}}
-.menu-card p {{
-    color: var(--muted); font-size: 1rem; line-height: 1.4;
+/* Alvo o texto do botão para ter a aparência de h1 */
+.stButton > button p, .stButton > button div[data-testid="stMarkdownContainer"] {{
+    font-size: clamp(1.4rem, 4vw, 2rem) !important; 
+    font-weight: 700 !important; 
+    margin: 0 !important; 
+    padding: 0 !important;
+    color: white !important; 
+    line-height: 1.25 !important;
+    text-align: center !important;
+    width: 100% !important;
 }}
 
 /* RESPONSIVO MOBILE */
@@ -298,8 +279,8 @@ div[data-testid="stTextInput"] input::placeholder {{
     .main-header h1 {{ font-size: 1.6rem !important; }}
     .main-header p {{ font-size: 0.9rem !important; }}
     
-    .menu-card {{ min-height: 110px; padding: 20px 15px; margin-bottom: 10px !important; }}
-    .menu-card h1 {{ font-size: 1.3rem !important; margin-bottom: 0; }}
+    .stButton > button {{ min-height: 110px !important; padding: 20px 15px !important; margin-bottom: 10px !important; }}
+    .stButton > button p, .stButton > button div[data-testid="stMarkdownContainer"] {{ font-size: 1.3rem !important; margin-bottom: 0 !important; }}
     
     /* Forçar colunas a ocuparem 100% no mobile */
     [data-testid="stHorizontalBlock"] {{ flex-direction: column !important; gap: 5px !important; }}
@@ -422,29 +403,19 @@ def tela_menu():
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("""
-        <div class="menu-card">
-            <h1>Concessão BID</h1>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Entrar", key="btn_bid", use_container_width=True):
+        if st.button("Concessão BID", key="btn_bid", use_container_width=True):
             st.session_state["force_collapse"] = True
             st.switch_page("pages/concessao_BID.py")
 
     with col2:
-        st.markdown("""
-        <div class="menu-card">
-            <h1>Ferramenta de Precificação</h1>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Entrar", key="btn_app", use_container_width=True):
+        if st.button("Ferramenta de Precificação", key="btn_app", use_container_width=True):
             st.session_state["force_collapse"] = True
             st.switch_page("pages/ferramenta_precificacao.py")
 
     st.markdown("""
     <div class="footer">
         Desenvolvido com Streamlit &amp; Python &nbsp;|&nbsp;
-        Uso Interno
+        Sicoob
     </div>
     """, unsafe_allow_html=True)
 

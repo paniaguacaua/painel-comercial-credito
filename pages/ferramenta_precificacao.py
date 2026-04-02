@@ -1563,7 +1563,7 @@ def main():
         st.markdown(f"""
         <div style="background: rgba(0,174,157,0.1); border: 1px solid {COR_BORDER}44; 
                     border-radius: 10px; padding: 10px; margin-top: 5px;">
-            <p style="color: {COR_MUTED}; font-size: 0.74rem; margin: 0; line-height: 1.3;">
+            <p style="color: {COR_MUTED}; font-size: 0.85rem; margin: 0; line-height: 1.3;">
                 📦 Base: {f'{len(df):,}'.replace(',', '.')} contratos carregados.
             </p>
         </div>
@@ -1571,8 +1571,8 @@ def main():
 
         st.markdown(f"""
         <div style="background: rgba(0,174,157,0.1); border: 1px solid {COR_BORDER}44; 
-                    border-radius: 10px; padding: 10px; margin-top: 5px;">
-            <p style="color: {COR_MUTED}; font-size: 0.74rem; margin: 0; line-height: 1.3;">
+                    border-radius: 10px; padding: 10px; margin-top: 10px;">
+            <p style="color: {COR_MUTED}; font-size: 0.85rem; margin: 0; line-height: 1.3;">
                 📌 <strong style="color: {COR_TEAL};">Nota:</strong> 
                 Esta visualização inclui apenas contratos com indexador <b>PREFIXADO</b>.
             </p>

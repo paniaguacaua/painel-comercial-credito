@@ -864,10 +864,6 @@ def main():
         "2016": "SICOOB UNIMAIS RIO",
     }
 
-    # Contador para reset de filtros
-    if "bid_reset" not in st.session_state:
-        st.session_state["bid_reset"] = 0
-    _r = st.session_state["bid_reset"]
 
     # ── Sidebar ──────────────────────────────
     with st.sidebar:
@@ -884,7 +880,7 @@ def main():
         st.markdown(f"<p style='color:{COR_MUTED};font-size:0.8rem;font-weight:100;"
                     f"letter-spacing:0.04em;margin:0 0 4px;'>CENTRAL</p>", unsafe_allow_html=True)
         central_sel = st.multiselect("Central", centrais, placeholder="Todas",
-                                     label_visibility="collapsed", key=f"bid_central_{_r}")
+                                     label_visibility="collapsed", key="bid_central")
 
         if not central_sel:
             coops_disp = sorted(df["cooperativa_num"].unique().tolist())
@@ -894,7 +890,7 @@ def main():
         st.markdown(f"<p style='color:{COR_MUTED};font-size:0.8rem;font-weight:100;"
                     f"letter-spacing:0.04em;margin:6px 0 4px;'>COOPERATIVA</p>", unsafe_allow_html=True)
         coop_sel = st.multiselect("Cooperativa", coops_disp, placeholder="Todas",
-                                  label_visibility="collapsed", key=f"bid_coop_{_r}")
+                                  label_visibility="collapsed", key="bid_coop")
 
         st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
 
@@ -906,28 +902,32 @@ def main():
         ano_mes_sel = st.multiselect("Mês-Ano", meses,
                                       format_func=lambda x: f"{x[5:7]}/{x[0:4]}",
                                       placeholder="Todos os períodos",
-                                      key=f"ano_mes_sel_{_r}")
+                                      key="bid_ano_mes_sel")
 
-        tp_sel = st.multiselect("Tipo de Pessoa", ["PF", "PJ"], placeholder="PF / PJ", key=f"bid_tp_{_r}")
+        tp_sel = st.multiselect("Tipo de Pessoa", ["PF", "PJ"], placeholder="PF / PJ", key="bid_tp")
 
         indexadores = sorted(df["indexador"].unique().tolist())
         indexador_sel = st.multiselect("Tipo de Indexador", indexadores,
                                  placeholder="Todos",
-                                 key=f"indexador_sel_{_r}")
+                                 key="bid_indexador_sel")
 
         st.markdown(f"<p style='color:{COR_MUTED};font-size:0.8rem;font-weight:100;"
                     f"letter-spacing:0.04em;margin:6px 0 4px;'>LINHA DE CRÉDITO</p>", unsafe_allow_html=True)
         categorias_credito = sorted(df["categoria_linha"].unique().tolist())
+        
+        if "bid_cat_linha_sel" not in st.session_state:
+            st.session_state["bid_cat_linha_sel"] = ["LINHA ASSOCIADO"] if "LINHA ASSOCIADO" in categorias_credito else []
+            
         categoria_linha_sel = st.multiselect("Linha de Crédito", categorias_credito,
                                            placeholder="Todas",
                                            label_visibility="collapsed",
-                                           key=f"cat_linha_sel_{_r}")
+                                           key="bid_cat_linha_sel")
 
         st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
         st.markdown(f"""
         <div style="background: rgba(0,174,157,0.1); border: 1px solid {COR_BORDER}44; 
                     border-radius: 10px; padding: 10px; margin-top: 5px;">
-            <p style="color: {COR_MUTED}; font-size: 0.74rem; margin: 0; line-height: 1.3;">
+            <p style="color: {COR_MUTED}; font-size: 0.85rem; margin: 0; line-height: 1.3;">
                 📦 Base: {f'{len(df):,}'.replace(',', '.')} contratos carregados.
             </p>
         </div>
@@ -978,7 +978,8 @@ def main():
             )
         with c_reset:
             def _limpar_filtros_bid():
-                st.session_state["bid_reset"] += 1
+                for k in ["bid_central", "bid_coop", "bid_ano_mes_sel", "bid_tp", "bid_indexador_sel", "bid_cat_linha_sel"]:
+                    st.session_state[k] = []
 
             st.button("Limpar", use_container_width=True,
                       on_click=_limpar_filtros_bid)
@@ -1075,13 +1076,13 @@ def main():
 
         df_coop_ops_disp = df_coop_ops.rename(columns={
             "Valor_Contratado": "Valor Contratado (R$)",
-            "Contagem":         "Qtd. Contratos",
+            "Contagem":         "Qtd Contratos",
         })
 
         st.dataframe(
-            df_coop_ops_disp[["Central","Cooperativa","Valor Contratado (R$)","Qtd. Contratos"]].style.format({
+            df_coop_ops_disp[["Central","Cooperativa","Valor Contratado (R$)","Qtd Contratos"]].style.format({
                 "Valor Contratado (R$)": lambda x: f"R$ {x:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
-                "Qtd. Contratos": lambda x: f"{x:,.0f}".replace(",", "."),
+                "Qtd Contratos": lambda x: f"{x:,.0f}".replace(",", "."),
             }),
             use_container_width=True,
             hide_index=True,
