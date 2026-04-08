@@ -886,9 +886,13 @@ def aplicar_filtros(
     if submod_sel:
         dff = dff[dff["submodalidade"].isin(submod_sel)]
     if fab_limite_sel:
-        dff = dff[dff["fab_limite"].isin(fab_limite_sel)]
+        # Normaliza para maiúsculo para bater com df["fab_limite"]
+        fab_sel_upper = [s.upper() for s in fab_limite_sel]
+        dff = dff[dff["fab_limite"].isin(fab_sel_upper)]
     if seg_prestamista_sel:
-        dff = dff[dff["seg_prestamista"].isin(seg_prestamista_sel)]
+        # Normaliza para maiúsculo para bater com df["seg_prestamista"]
+        seg_sel_upper = [s.upper() for s in seg_prestamista_sel]
+        dff = dff[dff["seg_prestamista"].isin(seg_sel_upper)]
     if tipo_pessoa_sel:
         dff = dff[dff["tipo_pessoa"].isin(tipo_pessoa_sel)]
     if fixado_sel:
@@ -1056,15 +1060,16 @@ def gerar_graficos(df: pd.DataFrame, risco_sel: list, df_totais: pd.DataFrame):
         if risco_sel:
             df_risco = df_risco[df_risco["risco"].isin(risco_sel)]
 
-        mediana = df_risco["valor_contrato"].median() if not df_risco.empty else 0
-        cores = [COR_VERDE if v < mediana else COR_TEAL
-                 for v in df_risco["valor_contrato"]]
-
         fig_risco = go.Figure()
         fig_risco.add_trace(go.Bar(
             x=df_risco["risco"],
             y=df_risco["valor_contrato"],
-            marker_color=cores,
+            marker=dict(
+                color=df_risco["valor_contrato"],
+                colorscale=[[0, "#003D4D"], [0.4, COR_TEAL], [1, COR_VERDE]],
+                showscale=False,
+                line=dict(color="rgba(0,0,0,0)", width=0),
+            ),
             marker_line=dict(color="rgba(0,0,0,0)", width=0),
             showlegend=False,
             customdata=df_risco['valor_contrato'].apply(lambda v: fmt_abrev(v)),

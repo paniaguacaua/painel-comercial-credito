@@ -709,7 +709,7 @@ def carregar_dados():
         "NÃO INFORMADO": "PREFIXADO",
         "TAXA SELIC": "SELIC",
     }, regex=False)
-    df["pre_pos"] = np.where(df["indexador"] == "PREFIXADO", "PRÉ", "PÓS")
+    df["pre_pos"] = np.where(df["indexador"] == "PREFIXADO", "PREFIXADO", "PÓS-FIXADO")
 
     # Linha de crédito
     df["linha_credito"]   = df_raw["Linha Crédito"].astype(str).str.strip()
@@ -1119,7 +1119,7 @@ def main():
 
         # Donut PF/PJ
         with col_g1:
-            st.markdown('<p class="chart-title">👤 Distribuição PF / PJ</p>', unsafe_allow_html=True)
+            st.markdown('<p class="chart-title">👤 Tipo de Pessoa</p>', unsafe_allow_html=True)
             df_tp = dff.groupby("tipo_pessoa")["valor_contrato"].sum().reset_index().sort_values("tipo_pessoa")
             fig_tp = go.Figure(go.Pie(
                 labels=df_tp["tipo_pessoa"],
@@ -1148,7 +1148,7 @@ def main():
 
         # Donut Pré/Pós
         with col_g2:
-            st.markdown('<p class="chart-title">📈 Pré / Pós Fixado</p>', unsafe_allow_html=True)
+            st.markdown('<p class="chart-title">📈 Tipo de Indexador</p>', unsafe_allow_html=True)
             df_pp = dff.groupby("pre_pos")["valor_contrato"].sum().reset_index().sort_values("pre_pos")
             fig_pp = go.Figure(go.Pie(
                 labels=df_pp["pre_pos"],

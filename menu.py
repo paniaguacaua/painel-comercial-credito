@@ -307,7 +307,24 @@ def tela_login():
     <style>
     [data-testid="stSidebar"]        { display: none !important; }
     [data-testid="collapsedControl"] { display: none !important; }
-    .block-container { padding-top: 0 !important; }
+    /* Centraliza e limita a largura do formulário em telas grandes */
+    .block-container {
+        max-width: 700px !important;
+        margin: 0 auto !important;
+        padding-top: 10vh !important;
+    }
+
+    /* Melhora o distanciamento do card */
+    .login-card {
+        background: #FFFFFF;
+        border: 1px solid #006B80;
+        border-radius: 20px;
+        padding: 40px 30px;
+        text-align: center;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+        margin-bottom: 10px;
+    }
+
     div[data-testid="stTextInput"] div[data-testid="InputInstructions"] {
         display: none !important;
     }
@@ -320,34 +337,28 @@ def tela_login():
         border: none !important;
         padding: 0.5rem 2rem !important;
         transition: all 0.3s ease !important;
-        height: 45px !important;
+        height: 52px !important;
         width: 100% !important;
     }
     div[data-testid="stFormSubmitButton"] button:hover {
         opacity: 0.9 !important;
         transform: translateY(-1px) !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2) !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div style='height:14vh'></div>", unsafe_allow_html=True)
+    # st.markdown("<div style='height:14vh'></div>", unsafe_allow_html=True)
 
-    _, col, _ = st.columns([1, 1.15, 1])
+    col = st.container()
     with col:
         st.markdown(f"""
-        <div style="
-            background:#FFFFFF;
-            border:1px solid {COR_BORDER};
-            border-radius:20px;
-            padding:38px 38px 34px;
-            text-align:center;
-            box-shadow:0 24px 64px rgba(0,0,0,0.55);">
-            <img src="{LOGO_B64}" style="height:110px;margin-bottom:18px;object-fit:contain;border-radius:20px;" alt="Sicoob" />
-            <div style="color:{COR_ESCURO};font-size:1.25rem;margin-bottom:0;font-weight:700;
+        <div class="login-card">
+            <img src="{LOGO_B64}" style="height:100px;margin-bottom:20px;object-fit:contain;" alt="Sicoob" />
+            <div style="color:{COR_ESCURO};font-size:1.5rem;margin-bottom:5px;font-weight:800;
                 font-family:{_PRIMARY_FONT};">
                 Painéis</div>
-            <div style="color:{COR_ESCURO};font-size:1rem;
+            <div style="color:{COR_ESCURO};font-size:1.1rem; opacity: 0.8;
                 font-family:{_PRIMARY_FONT};">
                 Acesso Restrito</div>
         </div>
