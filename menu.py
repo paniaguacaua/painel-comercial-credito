@@ -1,6 +1,7 @@
 # python.exe -m streamlit run menu.py
 
 import streamlit as st
+import streamlit.components.v1 as components
 import base64
 from pathlib import Path
 
@@ -8,7 +9,7 @@ from pathlib import Path
 # CONFIGURAÇÃO DA PÁGINA
 # ─────────────────────────────────────────────
 st.set_page_config(
-    page_title="Sicoob - Portal de Sistemas",
+    page_title="Sicoob - Painéis",
     page_icon="🏢",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -379,6 +380,19 @@ def tela_login():
                 placeholder="Digite a senha...",
                 label_visibility="collapsed",
                 key="senha_input",
+            )
+
+            components.html(
+                """
+                <script>
+                const input = window.parent.document.querySelector('input[type="password"]');
+                if (input) {
+                    input.focus();
+                }
+                </script>
+                """,
+                height=0,
+                width=0,
             )
 
             if st.form_submit_button("Entrar →", use_container_width=True):

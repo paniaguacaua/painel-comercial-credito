@@ -11,7 +11,6 @@ from pathlib import Path
 # ─────────────────────────────────────────────
 st.set_page_config(
     page_title="Ferramenta de Precificação",
-    page_icon="💲",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -411,7 +410,7 @@ div[data-testid="stButton"] button {{
 ::-webkit-scrollbar-thumb {{ background: var(--border); border-radius: 3px; }}
 
 /* ── LAYOUT ──────────────────────────────── */
-.block-container {{ padding-top: 1.4rem !important; }}
+.block-container {{ padding-top: 2rem !important; }}
 
 /* ── SIDEBAR HELPERS ─────────────────────── */
 .sb-divider {{ height: 1px; background: var(--border); margin: 14px 0; }}
