@@ -1613,16 +1613,6 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-        st.markdown(f"""
-        <div style="background: rgba(0,174,157,0.1); border: 1px solid {COR_BORDER}44; 
-                    border-radius: 10px; padding: 10px; margin-top: 10px;">
-            <p style="color: {COR_MUTED}; font-size: 0.85rem; margin: 0; line-height: 1.3;">
-                📌 <strong style="color: {COR_TEAL};">Nota:</strong> 
-                Esta visualização inclui apenas contratos com indexador <b>PREFIXADO</b>.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-
     # ════════════════════════════════════════
     # CONTEÚDO PRINCIPAL
     # ════════════════════════════════════════
