@@ -920,20 +920,17 @@ def main():
                     f"🏦 Central / Cooperativa</p>", unsafe_allow_html=True)
 
         centrais = sorted(df["central"].unique().tolist())
-        st.markdown(f"<p style='color:{COR_MUTED};font-size:0.8rem;font-weight:100;"
-                    f"letter-spacing:0.04em;margin:0 0 4px;'>CENTRAL</p>", unsafe_allow_html=True)
         central_sel = st.multiselect("Central", centrais, placeholder="Todas",
-                                     label_visibility="collapsed", key="bid_central")
+                                     key="bid_central")
 
         if not central_sel:
             coops_disp = sorted(df["cooperativa_num"].unique().tolist())
         else:
             coops_disp = sorted(df[df["central"].isin(central_sel)]["cooperativa_num"].unique().tolist())
 
-        st.markdown(f"<p style='color:{COR_MUTED};font-size:0.8rem;font-weight:100;"
-                    f"letter-spacing:0.04em;margin:6px 0 4px;'>COOPERATIVA</p>", unsafe_allow_html=True)
+
         coop_sel = st.multiselect("Cooperativa", coops_disp, placeholder="Todas",
-                                  label_visibility="collapsed", key="bid_coop")
+                                  key="bid_coop")
 
         st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
 
@@ -954,8 +951,7 @@ def main():
                                  placeholder="Todos",
                                  key="bid_indexador_sel")
 
-        st.markdown(f"<p style='color:{COR_MUTED};font-size:0.8rem;font-weight:100;"
-                    f"letter-spacing:0.04em;margin:6px 0 4px;'>LINHA DE CRÉDITO</p>", unsafe_allow_html=True)
+
         categorias_credito = sorted(df["categoria_linha"].unique().tolist())
         
         if "bid_cat_linha_sel" not in st.session_state:
@@ -967,7 +963,6 @@ def main():
             
         categoria_linha_sel = st.multiselect("Linha de Crédito", categorias_credito,
                                            placeholder="Todas",
-                                           label_visibility="collapsed",
                                            key="bid_cat_linha_sel")
 
         st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
@@ -1109,7 +1104,7 @@ def main():
         st.markdown('<p class="chart-title">📋 Detalhamento das Operações Contratadas por Cooperativa</p>',
                     unsafe_allow_html=True)
 
-        df_coop_ops = dff.groupby(["central", "cooperativa_num", "cooperativa_nom", "linha_credito"]).agg(
+        df_coop_ops = dff.groupby(["central", "cooperativa_num", "cooperativa_nom"]).agg(
             Valor_Contratado=("valor_contrato", "sum"),
             Contagem        =("num_proposta",   "count"),
         ).reset_index()

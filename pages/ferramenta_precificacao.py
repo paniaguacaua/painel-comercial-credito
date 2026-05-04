@@ -1530,24 +1530,19 @@ def main():
                     f"🏦 Central / Cooperativa</p>", unsafe_allow_html=True)
 
         centrais    = sorted(df["central"].unique().tolist())
-        st.markdown(f"<p style='color:{COR_MUTED};font-size:0.8rem;font-weight:100;"
-                    f"letter-spacing:0.04em;margin:0 0 4px;'>CENTRAL</p>",
-                    unsafe_allow_html=True)
         central_sel = st.multiselect("Central", centrais,
                                      placeholder="Todas",
-                                     label_visibility="collapsed", key=f"central_{_r}")
+                                     key=f"central_{_r}")
 
         if not central_sel:
             coops = sorted(df["cooperativa"].unique().tolist())
         else:
             coops = sorted(df[df["central"].isin(central_sel)]["cooperativa"].unique().tolist())
 
-        st.markdown(f"<p style='color:{COR_MUTED};font-size:0.8rem;font-weight:100;"
-                    f"letter-spacing:0.04em;margin:6px 0 4px;'>COOPERATIVA</p>",
-                    unsafe_allow_html=True)
+
         coop_sel = st.multiselect("Cooperativa", coops,
                                   placeholder="Todas",
-                                  label_visibility="collapsed", key=f"coop_{_r}")
+                                  key=f"coop_{_r}")
 
         st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
 
@@ -1601,7 +1596,7 @@ def main():
         riscos_opts = sorted(df["risco"].unique().tolist(), key=lambda r: int(str(r).replace('R', '')) if str(r).replace('R', '').isdigit() else 0)
 
         risco_sel = st.multiselect("Nível de Risco", riscos_opts, placeholder="Todos",
-                                   label_visibility="collapsed", key=f"risco_sel_{_r}")
+                                   key=f"risco_sel_{_r}")
 
         st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
         st.markdown(f"""
